@@ -117,6 +117,11 @@ export default class GeoJson {
             layer.bindTooltip(tooltipContent, { direction: 'top' });
           }
         }
+
+        // Make the layer clickable to show entity popup
+        layer.on('click', (e) => {
+          this._handleLayerClick(e);
+        });
       }
     });
 
@@ -126,7 +131,7 @@ export default class GeoJson {
 
   /**
    * @private
-   * @param {object} properties 
+   * @param {object} properties
    * @returns {string}
    */
   _createTooltipContent(properties) {
@@ -137,5 +142,33 @@ export default class GeoJson {
       .slice(0, 5); // Limit to first 5 properties
 
     return entries.length > 0 ? entries.join('<br>') : '';
+  }
+
+  /**
+   * Handle click on GeoJSON layer to show entity popup
+   * @private
+   * @param {L.LeafletMouseEvent} e
+   */
+  _handleLayerClick(e) {
+    // Stop propagation to prevent map click
+    L.DomEvent.stopPropagation(e);
+
+    // Create and dispatch hass-action event to show entity more-info dialog
+    const event = new CustomEvent('hass-action', {
+      bubbles: true,
+      composed: true,
+      detail: {
+        config: {
+          entity: this.entity.id,
+          tap_action: this.entity.config.tapAction
+        },
+        action: 'tap'
+      }
+    });
+
+    // Dispatch from the map container to ensure it bubbles up to Home Assistant
+    this.entity.map.getContainer().dispatchEvent(event);
+
+    Logger.debug(`[GeoJson]: Clicked on GeoJSON for ${this.entity.id}`);
   }
 }

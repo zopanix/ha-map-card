@@ -8,7 +8,10 @@ jest.mock('leaflet', () => ({
   geoJSON: jest.fn(() => ({
     addTo: jest.fn()
   })),
-  circleMarker: jest.fn()
+  circleMarker: jest.fn(),
+  DomEvent: {
+    stopPropagation: jest.fn()
+  }
 }));
 
 // Mock Logger to suppress expected error messages in tests
@@ -24,13 +27,19 @@ describe('GeoJson', () => {
 
   beforeEach(() => {
     mockMap = {
-      removeLayer: jest.fn()
+      removeLayer: jest.fn(),
+      getContainer: jest.fn(() => ({
+        dispatchEvent: jest.fn()
+      }))
     };
 
     mockEntity = {
       id: 'test-entity',
       map: mockMap,
-      attributes: {}
+      attributes: {},
+      config: {
+        tapAction: { action: 'more-info' }
+      }
     };
 
     jest.clearAllMocks();
@@ -255,6 +264,139 @@ describe('GeoJson', () => {
       const tooltip = geoJson._createTooltipContent({});
 
       expect(tooltip).toBe('');
+    });
+  });
+
+  describe('click handling', () => {
+    it('should add click handler to GeoJSON layers', () => {
+      const geoJsonData = {
+        type: 'Polygon',
+        coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+      };
+
+      mockEntity.attributes = {
+        zone_data: geoJsonData
+      };
+
+      const config = new GeoJsonConfig('zone_data', '#ff0000');
+      const geoJson = new GeoJson(config, mockEntity);
+
+      geoJson.setup();
+
+      // Verify onEachFeature was called
+      expect(L.geoJSON).toHaveBeenCalledWith(
+        geoJsonData,
+        expect.objectContaining({
+          onEachFeature: expect.any(Function)
+        })
+      );
+    });
+
+    it('should dispatch hass-action event when layer is clicked', () => {
+      const geoJsonData = {
+        type: 'Polygon',
+        coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+      };
+
+      mockEntity.attributes = {
+        zone_data: geoJsonData
+      };
+
+      // Create a spy for dispatchEvent
+      const dispatchEventSpy = jest.fn();
+      mockMap.getContainer.mockReturnValue({
+        dispatchEvent: dispatchEventSpy
+      });
+
+      const config = new GeoJsonConfig('zone_data', '#ff0000');
+      const geoJson = new GeoJson(config, mockEntity);
+
+      geoJson.setup();
+
+      // Get the onEachFeature callback
+      const onEachFeature = L.geoJSON.mock.calls[0][1].onEachFeature;
+
+      // Create a mock layer with an 'on' method
+      const mockLayer = {
+        on: jest.fn(),
+        bindTooltip: jest.fn()
+      };
+
+      // Call onEachFeature with a feature that has properties
+      const feature = {
+        properties: { name: 'Test Zone' }
+      };
+      onEachFeature(feature, mockLayer);
+
+      // Verify click handler was registered
+      expect(mockLayer.on).toHaveBeenCalledWith('click', expect.any(Function));
+
+      // Get the click handler
+      const clickHandler = mockLayer.on.mock.calls[0][1];
+
+      // Create a mock click event
+      const mockClickEvent = {
+        originalEvent: new MouseEvent('click')
+      };
+
+      // Call the click handler
+      clickHandler(mockClickEvent);
+
+      // Verify event was dispatched
+      expect(mockMap.getContainer).toHaveBeenCalled();
+      expect(dispatchEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'hass-action',
+          detail: expect.objectContaining({
+            config: {
+              entity: 'test-entity',
+              tap_action: { action: 'more-info' }
+            },
+            action: 'tap'
+          })
+        })
+      );
+    });
+
+    it('should stop event propagation when layer is clicked', () => {
+      const geoJsonData = {
+        type: 'Point',
+        coordinates: [0, 0]
+      };
+
+      mockEntity.attributes = {
+        zone_data: geoJsonData
+      };
+
+      const config = new GeoJsonConfig('zone_data', '#ff0000');
+      const geoJson = new GeoJson(config, mockEntity);
+
+      geoJson.setup();
+
+      // Get the onEachFeature callback
+      const onEachFeature = L.geoJSON.mock.calls[0][1].onEachFeature;
+
+      // Create a mock layer
+      const mockLayer = {
+        on: jest.fn()
+      };
+
+      // Call onEachFeature
+      onEachFeature({}, mockLayer);
+
+      // Get the click handler
+      const clickHandler = mockLayer.on.mock.calls[0][1];
+
+      // Create a mock click event
+      const mockClickEvent = {
+        originalEvent: new MouseEvent('click')
+      };
+
+      // Call the click handler
+      clickHandler(mockClickEvent);
+
+      // Verify stopPropagation was called
+      expect(L.DomEvent.stopPropagation).toHaveBeenCalledWith(mockClickEvent);
     });
   });
 });

@@ -206,7 +206,9 @@ The GeoJSON data in the entity attribute can be either:
 - A JSON string: `'{"type": "Polygon", "coordinates": [[[0,0], [1,0], [1,1], [0,1], [0,0]]]}'`
 - A parsed JSON object (if your integration provides it that way)
 
-If the GeoJSON Feature or FeatureCollection includes properties, they will be displayed in tooltips when hovering over the features.
+**Interactive Features:**
+- GeoJSON zones are **clickable** - clicking on any GeoJSON feature will show the entity's more-info dialog (or trigger the configured `tap_action`)
+- If the GeoJSON Feature or FeatureCollection includes properties, they will be displayed in tooltips when hovering over the features
 
 ### WMS and tile_layers options
 
