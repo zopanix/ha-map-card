@@ -25,6 +25,7 @@ describe('GeoJsonConfig', () => {
       expect(config.weight).toBe(3);
       expect(config.opacity).toBe(1.0);
       expect(config.fillOpacity).toBe(0.2);
+      expect(config.hideMarker).toBe(false);
     });
 
     it('should create config with object configuration', () => {
@@ -44,6 +45,7 @@ describe('GeoJsonConfig', () => {
       expect(config.weight).toBe(5);
       expect(config.opacity).toBe(0.8);
       expect(config.fillOpacity).toBe(0.5);
+      expect(config.hideMarker).toBe(false);
     });
 
     it('should use default attribute name when not specified in object', () => {
@@ -78,6 +80,38 @@ describe('GeoJsonConfig', () => {
       expect(config.weight).toBe(0);
       expect(config.opacity).toBe(0);
       expect(config.fillOpacity).toBe(0);
+    });
+
+    it('should set hideMarker to true when specified', () => {
+      const config = new GeoJsonConfig(
+        {
+          attribute: 'test',
+          hide_marker: true
+        },
+        '#ff0000'
+      );
+      expect(config.hideMarker).toBe(true);
+    });
+
+    it('should set hideMarker to false when explicitly set to false', () => {
+      const config = new GeoJsonConfig(
+        {
+          attribute: 'test',
+          hide_marker: false
+        },
+        '#ff0000'
+      );
+      expect(config.hideMarker).toBe(false);
+    });
+
+    it('should default hideMarker to false when not specified', () => {
+      const config = new GeoJsonConfig(
+        {
+          attribute: 'test'
+        },
+        '#ff0000'
+      );
+      expect(config.hideMarker).toBe(false);
     });
   });
 });

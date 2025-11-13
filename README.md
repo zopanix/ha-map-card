@@ -172,6 +172,7 @@ geojson:
   weight: 3
   opacity: 1.0
   fill_opacity: 0.2
+  hide_marker: false
 ```
 
 | name           | Default        | note                                                                                         |
@@ -181,6 +182,7 @@ geojson:
 | `weight`       | 3              | Line weight for GeoJSON features                                                             |
 | `opacity`      | 1.0            | Opacity of lines                                                                             |
 | `fill_opacity` | 0.2            | Opacity of filled areas                                                                      |
+| `hide_marker`  | false          | When set to `true`, hides the default entity marker and only displays the GeoJSON           |
 
 **Supported GeoJSON types:**
 - Point, MultiPoint
@@ -197,6 +199,7 @@ entities:
       attribute: zone_data
       color: '#3388ff'
       fill_opacity: 0.3
+      hide_marker: true
 ```
 
 The GeoJSON data in the entity attribute can be either:

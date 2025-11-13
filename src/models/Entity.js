@@ -142,8 +142,11 @@ export default class Entity {
   }
 
   setup() {
-    this.marker = this.createMapMarker();
-    this.marker.addTo(this.map);
+    // Only add marker if GeoJSON is not configured to hide it
+    if (!this.config.geoJsonConfig.hideMarker) {
+      this.marker = this.createMapMarker();
+      this.marker.addTo(this.map);
+    }
     this.historyManager.setup();
     this.circle.setup();
     this.geoJson.setup();
@@ -192,16 +195,19 @@ export default class Entity {
   }
 
   async update() {
-    if (this.display == "state" || this.display == "attribute") {
-      if (this.title != this._currentTitle) {
-        Logger.debug("[Entity] updating marker for " + this.id + " from " + this._currentTitle + " to " + this.title);
-        this.marker.remove();
-        this.marker = this.createMapMarker();
-        this.marker.addTo(this.map);
-        this._currentTitle = this.title;
+    // Only update marker if it exists (not hidden by GeoJSON config)
+    if (this.marker) {
+      if (this.display == "state" || this.display == "attribute") {
+        if (this.title != this._currentTitle) {
+          Logger.debug("[Entity] updating marker for " + this.id + " from " + this._currentTitle + " to " + this.title);
+          this.marker.remove();
+          this.marker = this.createMapMarker();
+          this.marker.addTo(this.map);
+          this._currentTitle = this.title;
+        }
       }
+      this.marker.setLatLng(this.latLng);
     }
-    this.marker.setLatLng(this.latLng);
     this.historyManager.update();
     this.circle.update();
     this.geoJson.update();

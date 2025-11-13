@@ -13,6 +13,8 @@ export default class GeoJsonConfig {
   opacity;
   /** @type {number} */
   fillOpacity;
+  /** @type {boolean} */
+  hideMarker;
 
   /**
    * @param {object|string|boolean} config 
@@ -33,6 +35,7 @@ export default class GeoJsonConfig {
       this.weight = 3;
       this.opacity = 1.0;
       this.fillOpacity = 0.2;
+      this.hideMarker = false;
       return;
     }
 
@@ -44,12 +47,13 @@ export default class GeoJsonConfig {
       this.weight = config.weight !== undefined ? config.weight : 3;
       this.opacity = config.opacity !== undefined ? config.opacity : 1.0;
       this.fillOpacity = config.fill_opacity !== undefined ? config.fill_opacity : 0.2;
+      this.hideMarker = config.hide_marker !== undefined ? config.hide_marker : false;
     } else {
       this.enabled = false;
     }
 
     Logger.debug(
-      `[GeoJsonConfig]: created with enabled: ${this.enabled}, attribute: ${this.attribute}, color: ${this.color}, weight: ${this.weight}, opacity: ${this.opacity}, fillOpacity: ${this.fillOpacity}`
+      `[GeoJsonConfig]: created with enabled: ${this.enabled}, attribute: ${this.attribute}, color: ${this.color}, weight: ${this.weight}, opacity: ${this.opacity}, fillOpacity: ${this.fillOpacity}, hideMarker: ${this.hideMarker}`
     );
   }
 }
